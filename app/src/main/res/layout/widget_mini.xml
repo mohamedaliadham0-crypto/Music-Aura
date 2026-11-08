@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_widget_glass"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="10dp">
+
+    <ImageView
+        android:id="@+id/widget_artwork"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:background="@drawable/bg_widget_artwork"
+        android:contentDescription="@string/app_name"
+        android:padding="6dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_widget_music" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="6dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/widget_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Aura Music"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/widget_artist"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Tap to play"
+            android:textColor="#B3FFFFFF"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/widget_btn_play_pause"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:background="@drawable/bg_widget_play_btn"
+        android:contentDescription="Play or Pause"
+        android:src="@drawable/ic_widget_play" />
+
+    <ImageButton
+        android:id="@+id/widget_btn_next"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_marginStart="6dp"
+        android:background="@drawable/bg_widget_button"
+        android:contentDescription="Next Song"
+        android:src="@drawable/ic_widget_next" />
+
+</LinearLayout>

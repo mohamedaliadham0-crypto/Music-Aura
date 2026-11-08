@@ -1,0 +1,6 @@
+{
+  "name": "Aura Music",
+  "description": "Premium native Android MP3 player with liquid glass aesthetic, background playback, and home screen widgets",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
