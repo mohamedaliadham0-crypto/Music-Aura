@@ -21,17 +21,25 @@ jobs:
 
     - name: Set up Gradle
       uses: gradle/actions/setup-gradle@v4
-      with:
-        gradle-version: '8.5'
+
+    - name: Make sure the Gradle wrapper exists
+      run: |
+        if [ ! -f gradlew ]; then
+          echo "gradlew not found, generating it..."
+          if [ -f gradle/wrapper/gradle-wrapper.properties ]; then
+            VERSION=$(grep distributionUrl gradle/wrapper/gradle-wrapper.properties | sed -E 's/.*gradle-([0-9.]+)-.*/\1/')
+          else
+            VERSION=8.9
+          fi
+          gradle wrapper --gradle-version "$VERSION"
+        fi
+        chmod +x gradlew
 
     - name: Build Debug APK
-      run: |
-        if [ -f gradlew ]; then
-          chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
-        else
-          gradle assembleDebug --stacktrace
-        fi
+      env:
+        # Only needed if your app uses an API key (see .env.example)
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      run: ./gradlew assembleDebug --stacktrace
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
