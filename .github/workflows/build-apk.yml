@@ -19,6 +19,16 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
+    - name: Create env files if missing
+      env:
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      run: |
+        if [ ! -f .env.example ]; then
+          echo "GEMINI_API_KEY=MY_GEMINI_API_KEY" > .env.example
+        fi
+        # Real key (if you added the secret), otherwise a placeholder
+        echo "GEMINI_API_KEY=${GEMINI_API_KEY:-MY_GEMINI_API_KEY}" > .env
+
     - name: Set up Gradle
       uses: gradle/actions/setup-gradle@v4
 
@@ -36,9 +46,6 @@ jobs:
         chmod +x gradlew
 
     - name: Build Debug APK
-      env:
-        # Only needed if your app uses an API key (see .env.example)
-        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       run: ./gradlew assembleDebug --stacktrace
 
     - name: Upload APK Artifact
