@@ -19,42 +19,88 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
-
-    - name: Setup Android Project Files & Wrapper
+    - name: Create Minimal Android Project Structure
       run: |
-        # Ensure the 'app' module exists with a valid build configuration
-        if [ ! -d "app" ]; then
-          mkdir -p app/src/main
-          echo 'android { namespace "com.music.aura" compileSdk 34 }' > app/build.gradle.kts
+        mkdir -p app/src/main
+        
+        # Create AndroidManifest if missing
+        if [ ! -f "app/src/main/AndroidManifest.xml" ]; then
+          cat << 'EOF' > app/src/main/AndroidManifest.xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.music.aura">
+    <application android:label="Music Aura" android:allowBackup="true" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:supportsRtl="true" android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        <activity android:name=".MainActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
+EOF
         fi
 
-        # Ensure settings file exists
-        if [ ! -f "settings.gradle.kts" ] && [ ! -f "settings.gradle" ]; then
-          echo 'include(":app")' > settings.gradle.kts
-        fi
+        # Create build.gradle.kts for app module
+        cat << 'EOF' > app/build.gradle.kts
+plugins {
+    id("com.android.application")
+}
 
-        # Download/Create the Gradle Wrapper files directly if gradlew is missing
-        if [ ! -f "./gradlew" ]; then
-          echo "Setting up Gradle wrapper..."
-          mkdir -p gradle/wrapper
-          
-          cat << 'EOF' > gradle/wrapper/gradle-wrapper.properties
-distributionBase=GRADLE_USER_HOME
-distributionPath=wrapper/dists
-distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-bin.zip
-zipStoreBase=GRADLE_USER_HOME
-zipStorePath=wrapper/dists
+android {
+    namespace = "com.music.aura"
+    compileSdk = 34
+
+    defaultConfig {
+        applicationId = "com.music.aura"
+        minSdk = 24
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+        }
+    }
+}
+
+dependencies {
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.google.android.material:material:1.9.0")
+}
 EOF
 
-          # Download official gradle wrapper script template
-          curl -sL https://raw.githubusercontent.com/gradle/gradle/v8.5/gradlew -o gradlew
-          chmod +x gradlew
-          
-          # Download wrapper jar
-          curl -sL https://raw.githubusercontent.com/gradle/gradle/v8.5/subprojects/ide/src/main/resources/org/gradle/plugins/ide/internal/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
-        fi
+        # Create settings.gradle.kts
+        cat << 'EOF' > settings.gradle.kts
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+rootProject.name = "Music-Aura"
+include(":app")
+EOF
+
+        # Create root build.gradle.kts
+        cat << 'EOF' > build.gradle.kts
+plugins {
+    id("com.android.application") version "8.1.1" apply false
+}
+EOF
+
+        # Generate gradle wrapper
+        gradle wrapper --gradle-version 8.5
+        chmod +x gradlew
 
     - name: Build Debug APK
       run: ./gradlew assembleDebug --stacktrace
