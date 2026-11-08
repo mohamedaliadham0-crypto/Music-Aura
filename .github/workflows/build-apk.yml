@@ -26,8 +26,45 @@ jobs:
         if [ ! -f .env.example ]; then
           echo "GEMINI_API_KEY=MY_GEMINI_API_KEY" > .env.example
         fi
-        # Real key (if you added the secret), otherwise a placeholder
         echo "GEMINI_API_KEY=${GEMINI_API_KEY:-MY_GEMINI_API_KEY}" > .env
+
+    - name: Create debug keystore if missing
+      run: |
+        if [ ! -f debug.keystore ]; then
+          keytool -genkeypair -v \
+            -keystore debug.keystore \
+            -storepass android \
+            -alias androiddebugkey \
+            -keypass android \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
+        fi
+
+    - name: Create placeholder google-services.json if missing
+      run: |
+        if [ ! -f app/google-services.json ]; then
+          cat << 'EOF' > app/google-services.json
+        {
+          "project_info": {
+            "project_number": "000000000000",
+            "project_id": "music-aura-placeholder",
+            "storage_bucket": "music-aura-placeholder.appspot.com"
+          },
+          "client": [
+            {
+              "client_info": {
+                "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                "android_client_info": { "package_name": "com.example.auramusic" }
+              },
+              "oauth_client": [],
+              "api_key": [ { "current_key": "placeholder" } ],
+              "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
+            }
+          ],
+          "configuration_version": "1"
+        }
+        EOF
+        fi
 
     - name: Set up Gradle
       uses: gradle/actions/setup-gradle@v4
@@ -35,7 +72,6 @@ jobs:
     - name: Make sure the Gradle wrapper exists
       run: |
         if [ ! -f gradlew ]; then
-          echo "gradlew not found, generating it..."
           if [ -f gradle/wrapper/gradle-wrapper.properties ]; then
             VERSION=$(grep distributionUrl gradle/wrapper/gradle-wrapper.properties | sed -E 's/.*gradle-([0-9.]+)-.*/\1/')
           else
