@@ -19,13 +19,26 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        tools-version: "9477386"
+
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
 
-    - name: Build Debug APK with Verbose Info
+    - name: Generate Wrapper if Missing
       run: |
         if [ ! -f "./gradlew" ]; then
           gradle wrapper --gradle-version 8.5
         fi
         chmod +x gradlew
-        ./gradlew assembleDebug --info
+
+    - name: Build Debug APK
+      run: ./gradlew assembleDebug --stacktrace
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-debug-apk
+        path: app/build/outputs/apk/debug/app-debug.apk
