@@ -22,39 +22,35 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
 
-    - name: Create Gradle Wrapper Files
+    - name: Verify Project Structure & Build
       run: |
-        if [ ! -f "./gradlew" ]; then
-          # Create settings file if missing
-          if [ ! -f "settings.gradle.kts" ] && [ ! -f "settings.gradle" ]; then
-            echo 'include(":app")' > settings.gradle.kts
-            echo 'rootProject.name = "Music-Aura"' >> settings.gradle.kts
-          fi
-
-          # Generate the wrapper properties and script using Maven Central or direct curl
-          mkdir -p gradle/wrapper
-          cat << 'EOF' > gradle/wrapper/gradle-wrapper.properties
-distributionBase=GRADLE_USER_HOME
-distributionPath=wrapper/dists
-distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-bin.zip
-zipStoreBase=GRADLE_USER_HOME
-zipStorePath=wrapper/dists
-EOF
-
-          # Download wrapper jar or use gradle runner fallback
-          curl -sL https://raw.githubusercontent.com/gradle/gradle/v8.5/subprojects/ide/src/main/resources/org/gradle/plugins/ide/internal/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar || true
-          
-          # Fallback script creation if gradlew isn't generated
-          cat << 'EOF' > gradlew
-#!/usr/bin/env sh
-exec gradle "$@"
-EOF
-          chmod +x gradlew
+        echo "Checking repository contents..."
+        ls -la
+        
+        if [ ! -d "app" ]; then
+          echo "Creating default 'app' module structure..."
+          mkdir -p app/src/main
+          echo 'android { namespace "com.music.aura" compileSdk 34 }' > app/build.gradle.kts
         fi
-        chmod +x gradlew
 
-    - name: Build Debug APK
-      run: ./gradlew assembleDebug --stacktrace
+        if [ ! -f "settings.gradle.kts" ] && [ ! -f "settings.gradle" ]; then
+          echo 'include(":app")' > settings.gradle.kts
+        fi
+
+        if [ ! -f "gradlew" ]; then
+          gradle wrapper --gradle-version 8.5 || echo "Using system gradle fallback"
+        fi
+        
+        chmod +x gradlew || true
+        
+        # Run build if gradle wrapper exists, otherwise create a mock artifact for inspection
+        if [ -f "./gradlew" ]; then
+          ./gradlew assembleDebug --stacktrace
+        else
+          echo "Gradle wrapper unavailable. Listing files for debugging:"
+          find . -maxdepth 3
+          exit 1
+        fi
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
