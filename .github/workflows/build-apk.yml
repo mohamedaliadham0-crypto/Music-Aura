@@ -19,94 +19,22 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Create Minimal Android Project Structure
-      run: |
-        mkdir -p app/src/main
-        
-        # Create AndroidManifest if missing
-        if [ ! -f "app/src/main/AndroidManifest.xml" ]; then
-          cat << 'EOF' > app/src/main/AndroidManifest.xml
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.music.aura">
-    <application android:label="Music Aura" android:allowBackup="true" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:supportsRtl="true" android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-        <activity android:name=".MainActivity" android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
-</manifest>
-EOF
-        fi
-
-        # Create build.gradle.kts for app module
-        cat << 'EOF' > app/build.gradle.kts
-plugins {
-    id("com.android.application")
-}
-
-android {
-    namespace = "com.music.aura"
-    compileSdk = 34
-
-    defaultConfig {
-        applicationId = "com.music.aura"
-        minSdk = 24
-        targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-        }
-    }
-}
-
-dependencies {
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.9.0")
-}
-EOF
-
-        # Create settings.gradle.kts
-        cat << 'EOF' > settings.gradle.kts
-pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
-    }
-}
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-rootProject.name = "Music-Aura"
-include(":app")
-EOF
-
-        # Create root build.gradle.kts
-        cat << 'EOF' > build.gradle.kts
-plugins {
-    id("com.android.application") version "8.1.1" apply false
-}
-EOF
-
-        # Generate gradle wrapper
-        gradle wrapper --gradle-version 8.5
-        chmod +x gradlew
+    - name: Set up Gradle
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        gradle-version: '8.5'
 
     - name: Build Debug APK
-      run: ./gradlew assembleDebug --stacktrace
+      run: |
+        if [ -f gradlew ]; then
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
+        else
+          gradle assembleDebug --stacktrace
+        fi
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: app-debug-apk
-        path: app/build/outputs/apk/debug/app-debug.apk
+        path: app/build/outputs/apk/debug/*.apk
